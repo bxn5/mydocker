@@ -1,0 +1,58 @@
+version: '2'
+
+services:
+  php7:
+      build: ./php/
+      ports:
+          - 80:80
+          - 443:443
+      volumes:
+        - /opt/lampp/htdocs:/var/www/html
+        - /home/bxn5/apachedata/hifi/sites-available/:/etc/apache2/sites-available
+        - /home/bxn5/docker/hifi/apachelogs:/var/log/apache2
+        - /opt/docker/hifi/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+      links:
+           - mysql
+      environment:
+        XDEBUG_CONFIG: "remote_host=192.168.1.181"
+        PHP_IDE_CONFIG: "serverName=Test"
+        VIRTUAL_HOST: "hifi.dev"
+         
+
+
+  mariadb-data:
+      image: tianon/true
+      volumes:
+          - /home/bxn5/mysqldata/hifi/mysql:/var/lib/mysql
+
+  mysql:
+      image: mariadb:latest
+      expose:
+          - 3306
+      volumes_from:
+          - "mariadb-data"
+      environment:
+          MYSQL_ROOT_PASSWORD: 123
+          MYSQL_DATABASE: magento
+          MYSQL_USER: magento
+          MYSQL_PASSWORD: 123
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links:
+      - mysql
+    ports:
+      - 8181:80
+    environment:
+      PMA_HOST: mysql
+  
+  redis:
+    image: redis
+    links: 
+      - php7
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.0
+    ports:
+      - "1025:1025"
+      - "8025:8025"
